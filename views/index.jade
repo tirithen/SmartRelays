@@ -1,0 +1,49 @@
+doctype html
+html
+    head
+        title Smart relays
+        meta(content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no", name="viewport")
+        link(rel="stylesheet", href="/bootstrap/css/bootstrap.min.css")
+        link(rel="stylesheet", href="/stylesheets/style.css")
+    body.container
+        h1 Smart relays
+        p Let these smart relays automate your home! Your train the system by turning the relays on/off until the system manages to do this automatically.
+        #relays
+        div.panel.panel-default
+            .panel-heading
+                h2.panel-title Register a new relay
+            form#addRelay.panel-body.row
+                .col-xs-12.col-sm-4
+                    .input-group
+                        span.input-group-addon Name
+                        input.form-control(type="text", name="name", placeholder="A unique relay name", required)
+                .col-xs-12.col-sm-4
+                    .input-group
+                        span.input-group-addon Remote
+                        input.form-control(type="text", name="remote", placeholder="The id of the remote", required, pattern="^[0-9]+$")
+                .col-xs-12.col-sm-2
+                    .input-group
+                        span.input-group-addon Unit
+                        input.form-control(type="text", name="unit", placeholder="1-3", required, pattern="^[123]$")
+                .col-sm-2.pull-right
+                    button.btn.btn-primary.pull-right(type="submit") Add relay
+        div.panel.panel-default
+            .panel-heading
+                h2.panel-title Add phone MAC address to determine if someone is home
+            form#addMacAddress.panel-body.row
+                p.col-xs-12 If you are on the same local network as the server, your current clients MAC address is pre-filled, so if this is your phone you only have to click on the "Add MAC" button.
+                .col-xs-12.col-sm-10
+                    .input-group
+                        span.input-group-addon MAC address
+                        input.form-control(value="#{mac}", type="text", name="mac", placeholder="MAC address", required, pattern="^([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})$")
+                .col-sm-2.pull-right
+                    button.btn.btn-primary.pull-right(type="submit") Add MAC
+                .col-xs-12
+                    p Registered MAC addresses
+                    ul.list-group
+                        li.list-group-item
+                            em There are currently no phones registered
+        script(src="/socket.io/socket.io.js")
+        script(src="/jquery-2.0.3.js")
+        script(src="/bootstrap/js/bootstrap.min.js")
+        script(src="/script.js")
