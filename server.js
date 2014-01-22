@@ -1,4 +1,4 @@
-var nn = require('nn'),
+var nn = require('simple-fann'),
     configuration = require('./configuration'),
     http = require('http'),
     async = require('async'),
@@ -7,7 +7,7 @@ var nn = require('nn'),
     SmartRelayCase = require('./SmartRelayCase'),
     webServer = require('./webServer'),
     onlineLocalClients = require('./onlineLocalClients'),
-    //~ arduino = require('./smartRelaysArduino'),
+    arduino = require('./smartRelaysArduino'),
     socketServer,
     relayTimer,
     macTimer,
@@ -69,7 +69,7 @@ function updateRelays() {
                             relay.save();
                         }
 
-                        //~ sendRadioSignal(relay, next);
+                        sendRadioSignal(relay, next);
                         next();
                     } else {
                         next();
@@ -143,12 +143,12 @@ async.parallel(
                 callback();
             });
         },
-        //~ function (callback) {
-            //~ arduino(callback);
-        //~ }
+        function (callback) {
+            arduino(callback);
+        }
     ],
     function (errors, results) {
-        //~ arduino = results[2];
+        arduino = results[2];
 
         if (errors) {
             throw errors;
@@ -222,7 +222,7 @@ async.parallel(
                         );
                     }
 
-                    //~ sendRadioSignal(relay);
+                    sendRadioSignal(relay);
 
                     relay.save(function (error) {
                         if (error) {
