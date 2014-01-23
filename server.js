@@ -41,6 +41,7 @@ function sendRadioSignal(relay, callback) {
         );
     } else {
         console.warn('No Arduino connected, not sending anything.');
+        callback();
     }
 }
 
@@ -77,7 +78,6 @@ function updateRelays() {
                         }
 
                         sendRadioSignal(relay, next);
-                        next();
                     } else {
                         next();
                     }
