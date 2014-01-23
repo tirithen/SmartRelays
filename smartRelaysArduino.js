@@ -1,5 +1,6 @@
 var serialPort = require('serialport'),
-    async = require('async');
+    async = require('async'),
+    retryDelay = 10000;
 
 // TODO: Add automatic reconnect
 
@@ -57,7 +58,10 @@ function findArduino(callback) {
             },
             function (code) {
                 callback(
-                    code === FOUND_CODE ? null : new Error('No Arduino with SmartRelay sketch running'),
+                    code === FOUND_CODE ? null : new Error(
+                        'No Arduino with SmartRelay firmware running, please make sure that you have ' +
+                        'the Arduino device with proper firmware connected the the server.'
+                    ),
                     arduino
                 );
             }
@@ -66,5 +70,23 @@ function findArduino(callback) {
 }
 
 module.exports = function (callback) {
-    findArduino(callback);
+    var arduino = {};
+
+    findArduino(function (error, port) {
+        if (error) {
+            console.error(error.message);
+            console.log('Retrying Arduino detection in ' + Math.round(retryDelay / 1000) + ' seconds.');
+            setTimeout(function () {
+                findArduino(callback);
+            }, retryDelay);
+        }
+
+        arduino.port = port;
+
+        if (callback instanceof Function) {
+            callback(error, port);
+        }
+    });
+
+    return arduino;
 };

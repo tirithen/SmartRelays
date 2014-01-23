@@ -7,7 +7,7 @@ var nn = require('simple-fann'),
     SmartRelayCase = require('./SmartRelayCase'),
     webServer = require('./webServer'),
     onlineLocalClients = require('./onlineLocalClients'),
-    arduino = require('./smartRelaysArduino'),
+    arduino = require('./smartRelaysArduino')(),
     socketServer,
     relayTimer,
     macTimer,
@@ -21,20 +21,27 @@ function pad(n, width, z) {
 }
 
 function sendRadioSignal(relay, callback) {
-    var signal = relay.unit - 1;
+    var signal;
 
-    signal += 1 << 5;
-    if (!relay.status) {
-        signal += 1 << 4;
-    }
-    signal += relay.remote << 6;
+    if (arduino && arduino.port) {
+        console.log('Sending radio signal command to Arduino.');
+        signal = relay.unit - 1;
 
-    arduino.write(
-        'p' + pad(signal.toString(16), 8) + '\n',
-        function () {
-            setTimeout(callback, 100);
+        signal += 1 << 5;
+        if (!relay.status) {
+            signal += 1 << 4;
         }
-    );
+        signal += relay.remote << 6;
+
+        arduino.port.write(
+            'p' + pad(signal.toString(16), 8) + '\n',
+            function () {
+                setTimeout(callback, 100);
+            }
+        );
+    } else {
+        console.warn('No Arduino connected, not sending anything.');
+    }
 }
 
 function updateRelays() {
@@ -142,14 +149,9 @@ async.parallel(
                 webServer = server;
                 callback();
             });
-        },
-        function (callback) {
-            arduino(callback);
         }
     ],
     function (errors, results) {
-        arduino = results[2];
-
         if (errors) {
             throw errors;
         }
