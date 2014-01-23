@@ -1,92 +1,98 @@
 var serialPort = require('serialport'),
     async = require('async'),
-    retryDelay = 10000;
+    retryDelay = 10000,
+    service = {};
 
 // TODO: Add automatic reconnect
 
-function findArduino(callback) {
-    var arduino,
+function findArduino() {
+    var arduinoPort,
         FOUND_CODE = 'ArduinoFound';
 
-    serialPort.list(function (error, ports) {
-        async.each(
-            ports,
-            function (port, next) {
-                var arduinoCandidate,
-                    timer,
-                    nextCalled = false;
+    if (!service.port) {
+        serialPort.list(function (error, ports) {
+            async.each(
+                ports,
+                function (port, next) {
+                    var arduinoPortCandidate,
+                        timer,
+                        nextCalled = false;
 
-                function callNext(code) {
-                    clearTimeout(timer);
+                    function callNext(code) {
+                        clearTimeout(timer);
 
-                    if (nextCalled === false) {
-                        nextCalled = true;
+                        if (nextCalled === false) {
+                            nextCalled = true;
 
-                        if (code !== FOUND_CODE) {
-                            arduinoCandidate.close();
+                            if (code !== FOUND_CODE) {
+                                arduinoPortCandidate.close();
+                            }
+
+                            next(code);
                         }
-
-                        next(code);
                     }
-                }
 
-                if (arduino) {
-                    next();
-                } else if (port.comName.match(/^\/dev\/tty/)) { // If potential Arduino serial port
-                    arduinoCandidate = new serialPort.SerialPort(
-                        port.comName,
-                        { baudrate: 115200 }
-                    );
+                    if (arduinoPort) {
+                        next();
+                    } else if (port.comName.match(/^\/dev\/tty/)) { // If potential Arduino serial port
+                        arduinoPortCandidate = new serialPort.SerialPort(
+                            port.comName,
+                            { baudrate: 115200 }
+                        );
 
-                    arduinoCandidate.on('data', function (data) {
-                        if (data.toString().match(/SmartRelay/)) {
-                            arduino = arduinoCandidate;
-                            callNext(FOUND_CODE);
-                        } else {
+                        arduinoPortCandidate.on('data', function (data) {
+                            if (data.toString().match(/SmartRelay/)) {
+                                arduinoPort = arduinoPortCandidate;
+                                callNext(FOUND_CODE);
+                            } else {
+                                callNext();
+                            }
+                        });
+
+                        arduinoPortCandidate.on('error', function () {
                             callNext();
-                        }
-                    });
+                        });
 
-                    arduinoCandidate.on('error', function () {
-                        callNext();
-                    });
+                        timer = setTimeout(function () {
+                            callNext();
+                        }, 2000);
+                    }
+                },
+                function (code) {
+                    var error;
 
-                    timer = setTimeout(function () {
-                        callNext();
-                    }, 2000);
+                    if (code !== FOUND_CODE) {
+                        error = new Error(
+                            'No Arduino with SmartRelay firmware running, please make sure that you have ' +
+                            'the Arduino device with proper firmware connected the the server.'
+                        );
+                        console.error(error.message);
+                    }
+
+                    service.port = arduinoPort;
+                    service.error = error;
+
+                    if (arduinoPort) {
+                        arduinoPort.on('close', function () {
+                            service.port = null;
+                        });
+
+                        arduinoPort.on('error', function () {
+                            service.port = null;
+                        });
+                    }
+
+                    setInterval(function () {
+                        findArduino();
+                    }, retryDelay);
                 }
-            },
-            function (code) {
-                callback(
-                    code === FOUND_CODE ? null : new Error(
-                        'No Arduino with SmartRelay firmware running, please make sure that you have ' +
-                        'the Arduino device with proper firmware connected the the server.'
-                    ),
-                    arduino
-                );
-            }
-        );
-    });
+            );
+        });
+    }
 }
 
-module.exports = function (callback) {
-    var arduino = {};
+module.exports = function () {
+    findArduino();
 
-    findArduino(function (error, port) {
-        if (error) {
-            console.error(error.message);
-            console.log('Retrying Arduino detection in ' + Math.round(retryDelay / 1000) + ' seconds.');
-            setTimeout(function () {
-                findArduino(callback);
-            }, retryDelay);
-        }
-
-        arduino.port = port;
-
-        if (callback instanceof Function) {
-            callback(error, port);
-        }
-    });
-
-    return arduino;
+    return service;
 };
