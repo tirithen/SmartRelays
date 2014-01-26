@@ -259,6 +259,6 @@ async.parallel(
 
         updateRelays();
         updateMacs();
-        trainNetworks();
+        trainTimer = setTimeout(trainNetworks, 3600 * 1000);
     }
 );
