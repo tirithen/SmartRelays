@@ -195,10 +195,16 @@ async.parallel(
             socket.on('relay update', function (data) {
                 // TODO: add validation
                 models.Relay.findById(data._id, function (error, relay) {
-                    var key = '', trainCase;
+                    var key = '',
+                        trainCase,
+                        statusWasChanged = false;
 
                     if (error) {
                         throw error;
+                    }
+
+                    if (relay.status !== data.status) {
+                        statusWasChanged = true;
                     }
 
                     for(key in data) {
@@ -207,7 +213,7 @@ async.parallel(
                         }
                     }
 
-                    if (relay.autonomous) {
+                    if (statusWasChanged) {
                         trainCase = new SmartRelayCase({
                             date: new Date(),
                             someOneIsHome: macOnlineCount > 0 ? 1 : 0,
