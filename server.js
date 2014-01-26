@@ -12,7 +12,8 @@ var nn = require('simple-fann'),
     relayTimer,
     macTimer,
     trainTimer,
-    macOnlineCount = 0;
+    macOnlineCount = 0,
+    clientSyncDelay = 20000;
 
 function pad(n, width, z) {
     z = z || '0';
@@ -84,7 +85,7 @@ function updateRelays() {
                 },
                 function () {
                     socketServer.sockets.emit('relays', relays);
-                    relayTimer = setTimeout(updateRelays, 20000);
+                    relayTimer = setTimeout(updateRelays, clientSyncDelay);
                 }
             );
         });
@@ -112,7 +113,7 @@ function updateMacs() {
         });
 
         socketServer.sockets.emit('macs', macs);
-        macTimer = setTimeout(updateMacs, 5000);
+        macTimer = setTimeout(updateMacs, clientSyncDelay);
     });
 }
 
