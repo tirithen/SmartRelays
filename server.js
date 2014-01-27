@@ -231,7 +231,7 @@ async.parallel(
                         );
                     }
 
-                    sendRadioSignal(relay);
+                    sendRadioSignal(relay, function () {});
 
                     relay.save(function (error) {
                         if (error) {
