@@ -3,6 +3,7 @@ var nn = require('simple-fann'),
     http = require('http'),
     async = require('async'),
     io = require('socket.io'),
+    schedule = require('node-schedule'),
     models = require('./models').initialize(configuration),
     SmartRelayCase = require('./SmartRelayCase'),
     webServer = require('./webServer'),
@@ -11,9 +12,9 @@ var nn = require('simple-fann'),
     socketServer,
     relayTimer,
     macTimer,
-    trainTimer,
     macOnlineCount = 0,
-    clientSyncDelay = 20000;
+    clientSyncDelay = 20000,
+    trainingOfNetworksRunning = false;
 
 function pad(n, width, z) {
     z = z || '0';
@@ -120,24 +121,26 @@ function updateMacs() {
 function trainNetworks() {
     var models = [];
 
-    clearTimeout(trainTimer);
+    if (!trainingOfNetworksRunning) {
+        trainingOfNetworksRunning = true;
 
-    for (modelName in nn.models) {
-        if (nn.models.hasOwnProperty(modelName)) {
-            models.push(nn.models[modelName]);
+        for (modelName in nn.models) {
+            if (nn.models.hasOwnProperty(modelName)) {
+                models.push(nn.models[modelName]);
+            }
         }
+
+        async.eachSeries(
+            models,
+            function (model, next) {
+                model.train(next);
+            },
+            function (error) {
+                models = null;
+                trainingOfNetworksRunning = false;
+            }
+        );
     }
-
-    async.eachSeries(
-        models,
-        function (model, next) {
-            model.train(next);
-        },
-        function (error) {
-            models = null;
-            trainTimer = setTimeout(trainNetworks, 3600 * 1000);
-        }
-    );
 }
 
 async.parallel(
@@ -251,7 +254,7 @@ async.parallel(
                     }
 
                     if (!mac) {
-                        mac = new models.Mac(data);
+                        mac = new models.Ma,c(data);
                         mac.save(function (error) {
                             if (error) {
                                 throw error;
@@ -266,6 +269,7 @@ async.parallel(
 
         updateRelays();
         updateMacs();
-        trainTimer = setTimeout(trainNetworks, 3600 * 1000);
+
+        schedule.scheduleJob({ hour: 2, minute: 0 }, trainNetworks);
     }
 );
