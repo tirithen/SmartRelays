@@ -20,6 +20,7 @@ form {
         position: relative;
 
         .label {
+            .label-success;
             position: absolute;
             top: 12px;
             right: 15px;
@@ -28,8 +29,28 @@ form {
 }
 
 .relay {
+    background: #eee;
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.1) inset;
+    border-radius: 15px;
+
     h2 {
         float: left;
         margin: 0;
+        width: auto;
+        word-wrap: break-word;
+        margin-bottom: 10px;
+    }
+
+    .button-toggle {
+        margin-right: 15px;
+    }
+}
+
+@media (min-width: @container-tablet) {
+    .relay {
+        h2 {
+            width: ~'calc(100% - 205px)';
+            margin-bottom: 0;
+        }
     }
 }

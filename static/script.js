@@ -32,32 +32,29 @@ $(function () {
                 '<div class="panel-body">' +
                     '<h2 class="name"></h2> ' +
                     '<div class="pull-right">' +
-                        '<div class="btn-group">' +
-                            '<button type="button" class="btn btn-primary on"><span class="glyphicon glyphicon-star"></span> On</button>' +
-                            '<button type="button" class="btn btn-primary off"><span class="glyphicon glyphicon-star-empty"></span> Off</button> ' +
-                        '</div> ' +
-                        '<button type="button" class="btn btn-primary autonomous" data-toggle="button"><span class="glyphicon glyphicon-eye-open"></span> Automatic</button>' +
+                        '<button type="button" class="button-toggle" data-toggle="button">' +
+                            '<i class="glyphicon glyphicon-off"></i>' +
+                        '</button>' +
+                        '<button type="button" class="button-switch" data-toggle="button"><i></i><span>Auto. mode</span></button>' +
                     '</div>' +
                 '</div>' +
             '</div>'
         ).appendTo(relayWrapper);
         this.nameElement = this.relayElement.find('.name');
-        this.onButtonElement = this.relayElement.find('.on');
-        this.offButtonElement = this.relayElement.find('.off');
-        this.autonomousButtonElement = this.relayElement.find('.autonomous');
+        this.statusButtonElement = this.relayElement.find('.button-toggle');
+        this.autonomousButtonElement = this.relayElement.find('.button-switch');
     };
 
     Relay.prototype.bindElements = function () {
         var self = this;
 
-        this.onButtonElement.on('click', function () {
-            self.status = 1;
-            self.updateElements();
-            self.sync();
-        });
+        this.statusButtonElement.on('click', function () {
+            if (self.status) {
+                self.status = 0;
+            } else {
+                self.status = 1;
+            }
 
-        this.offButtonElement.on('click', function () {
-            self.status = 0;
             self.updateElements();
             self.sync();
         });
@@ -80,11 +77,9 @@ $(function () {
         }
 
         if (this.status) {
-            this.onButtonElement.addClass('active');
-            this.offButtonElement.removeClass('active');
+            this.statusButtonElement.addClass('active');
         } else {
-            this.offButtonElement.addClass('active');
-            this.onButtonElement.removeClass('active');
+            this.statusButtonElement.removeClass('active');
         }
 
         if (this.autonomous) {
@@ -151,7 +146,7 @@ $(function () {
                 var macElement = $('<li class="list-group-item">' + macData.mac + '</li>');
 
                 if (macData.online) {
-                    $('<small class="text-muted"><em> - ' + macData.ip + '</em></small> <span class="label label-success pull-right ">Online</span>').appendTo(macElement);
+                    $('<small class="text-muted"><em> - ' + macData.ip + '</em></small> <span class="label">Online</span>').appendTo(macElement);
                 }
 
                 if (macData.mac === macFieldElement.val()) {
