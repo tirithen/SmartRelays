@@ -35,7 +35,7 @@ $(function () {
                         '<button type="button" class="button-toggle" data-toggle="button">' +
                             '<i class="glyphicon glyphicon-off"></i>' +
                         '</button>' +
-                        '<button type="button" class="button-switch" data-toggle="button"><i></i><span>Auto. mode</span></button>' +
+                        '<button type="button" class="button-switch" data-toggle="button"><i></i><span>Smart</span></button>' +
                     '</div>' +
                 '</div>' +
             '</div>'
