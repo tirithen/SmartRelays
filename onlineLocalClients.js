@@ -1,60 +1,42 @@
-var arp = require('node-arp'),
-    ip = require('ip'),
+var ip = require('ip'),
     async = require('async'),
-    spawn = require('child_process').spawn,
-    updateTimer;
+    exec = require('child_process').exec,
+    updateTimer,
+    updateDelay = 10000;
 
 module.exports.clients = {};
 
-module.exports.getMacByIp = function (ip, callback) {
-    arp.getMAC(ip, callback);
-};
-
-module.exports.updateAll = function (callback) {
-    var firstIp = ip.address().replace(/\d+$/, '1'),
-        nmap = spawn("nmap", [ '-sP', firstIp + '/24' ]),
-        buffer = '';
+module.exports.updateAll = function () {
+    var firstIp = ip.address().replace(/\d+$/, '255');
 
     clearTimeout(updateTimer);
 
-    nmap.stdout.on('data', function (data) {
-        buffer += data;
-    });
+    exec(
+        'ping -b -c 1 ' + firstIp + ' && arp',
+        { timeout: 2000 },
+        function (error, output) {
+            if (error || !output) {
+                updateTimer = setTimeout(module.exports.updateAll, 1000);
+            } else {
+                module.exports.clients = {};
+                output.split('\n').forEach(function (line) {
+                    var matches;
 
-	nmap.on('close', function (code) {
-        module.exports.clients = {};
-        async.eachLimit(
-            buffer.split('\n'),
-            5,
-            function (line, next) {
-                var matches = line.match(/(\d{1,3}\.){3}\d{1,3}/);
-
-                if (matches && matches[0]) {
-                    module.exports.getMacByIp(matches[0], function (error, mac) {
-                        if (error) {
-                            next(error);
-                        } else {
-                            module.exports.clients[mac] = {
-                                ip: matches[0],
-                                mac: mac
-                            };
-
-                            next(error);
+                    if (line) {
+                        matches = line.match(/((\d{1,3}\.){3}\d{1,3}).+?(([\da-f]{2}\:){5}[\da-f]{2})/i);
+                        if (matches) {
+                            module.exports.clients[matches[3]] = {
+                                ip: matches[1],
+                                mac: matches[3]
+                            };                        
                         }
-                    });
-                } else {
-                    next();
-                }
-            },
-            function (error) {
-                if (callback instanceof Function) {
-                    callback(error, module.exports.clients);
-                }
+                    }
+                });
 
-                setTimeout(module.exports.updateAll, 20000);
+                updateTimer = setTimeout(module.exports.updateAll, updateDelay);
             }
-        );
-	});
+        }
+    );
 };
 
 module.exports.updateAll();
