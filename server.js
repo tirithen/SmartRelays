@@ -254,7 +254,7 @@ async.parallel(
                     }
 
                     if (!mac) {
-                        mac = new models.Ma,c(data);
+                        mac = new models.Mac(data);
                         mac.save(function (error) {
                             if (error) {
                                 throw error;
