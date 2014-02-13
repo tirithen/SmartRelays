@@ -6,13 +6,31 @@ var ip = require('ip'),
 
 module.exports.clients = {};
 
+module.exports.getMacByIp = function (ip) {
+    var key = '',
+        mac,
+        clients = module.exports.clients;
+
+    for (key in clients) {
+        if (
+            clients.hasOwnProperty(key) &&
+            ip === clients[key].ip
+        ) {
+            mac = module.exports.clients[key].mac;
+            break;
+        }
+    }
+
+    return mac;
+};
+
 module.exports.updateAll = function () {
-    var firstIp = ip.address().replace(/\d+$/, '255');
+    var broadcastIp = ip.address().replace(/\d+$/, '1');
 
     clearTimeout(updateTimer);
 
     exec(
-        'ping -b -c 1 ' + firstIp + ' && arp',
+        'ping -b -c 1 ' + broadcastIp + ' && arp -na',
         { timeout: 2000 },
         function (error, output) {
             if (error || !output) {
@@ -28,7 +46,7 @@ module.exports.updateAll = function () {
                             module.exports.clients[matches[3]] = {
                                 ip: matches[1],
                                 mac: matches[3]
-                            };                        
+                            };
                         }
                     }
                 });

@@ -3,6 +3,7 @@ var nn = require('simple-fann'),
     http = require('http'),
     async = require('async'),
     io = require('socket.io'),
+    ip = require('ip'),
     schedule = require('node-schedule'),
     models = require('./models').initialize(configuration),
     SmartRelayCase = require('./SmartRelayCase'),
@@ -155,16 +156,15 @@ async.parallel(
             });
         }
     ],
-    function (errors, results) {
+    function (errors) {
         if (errors) {
             throw errors;
         }
 
         webServer.get('/', function (request, response) {
-            var ip = (request.headers['x-forwarded-for'] || '').split(',')[0] || request.connection.remoteAddress;
-            onlineLocalClients.getMacByIp(ip, function (error, mac) {
-                response.render('index', { mac: mac || '' });
-            });
+            var ip = (request.headers['x-forwarded-for'] || '').split(',')[0] || request.connection.remoteAddress,
+                mac = onlineLocalClients.getMacByIp(ip);
+            response.render('index', { mac: mac || '' });
         });
 
         socketServer = io.listen(
@@ -271,5 +271,7 @@ async.parallel(
         updateMacs();
 
         schedule.scheduleJob({ hour: 2, minute: 0 }, trainNetworks);
+
+        console.log('SmartRelays server is up and running on port http://' + ip.address() + ':' + configuration.port);
     }
 );
