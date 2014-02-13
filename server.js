@@ -14,8 +14,9 @@ var nn = require('simple-fann'),
     relayTimer,
     macTimer,
     macOnlineCount = 0,
-    clientSyncDelay = 20000,
-    trainingOfNetworksRunning = false;
+    clientSyncDelay = configuration.clientSyncDelay || 20000,
+    trainingOfNetworksRunning = false,
+    autoEnableAutonomousModeForRelayOn = {};
 
 function pad(n, width, z) {
     z = z || '0';
@@ -64,6 +65,15 @@ function updateRelays() {
                 relays,
                 function (relay, next) {
                     var result;
+
+                    if (!autoEnableAutonomousModeForRelayOn[relay._id]) {
+                        relay.autonomous = true;
+                    }
+
+                    if (autoEnableAutonomousModeForRelayOn[relay._id] < Date.now()) {
+                        relay.autonomous = true;
+                        delete autoEnableAutonomousModeForRelayOn[relay._id];
+                    }
 
                     if (
                         relay.autonomous &&
@@ -259,6 +269,11 @@ async.parallel(
                                 someOneIsHome: trainCase.someOneIsHome
                             }
                         );
+
+                        if (relay.autonomous) {
+                            autoEnableAutonomousModeForRelayOn[relay._id] = Date.now() + configuration.autoEnableAutonomousModeForRelayDelay
+                            relay.autonomous = false;
+                        }
                     }
 
                     sendRadioSignal(relay, function () {});
