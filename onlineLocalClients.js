@@ -30,7 +30,10 @@ module.exports.updateAll = function () {
     clearTimeout(updateTimer);
 
     exec(
-        'ping -b -c 1 ' + broadcastIp + '1 && ping -b -c 1 ' + broadcastIp + '255 && arp -na',
+        'nmap -sP ' + broadcastIp + '0/24 && ' +
+        'ping -b -c 1 ' + broadcastIp + '1 && ' +
+        'ping -b -c 1 ' + broadcastIp + '255 && ' +
+        'arp -na',
         { timeout: 2000 },
         function (error, output) {
             if (error || !output) {
