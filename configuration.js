@@ -1,7 +1,7 @@
 module.exports = {
     port: 2000,
     cookieSecret: 'wie4Rah3eGh{a2abAhsh1oi]',
-    databaseConnectionString: 'mongodb://localhost/smartlamp2',
+    databaseConnectionString: 'mongodb://localhost/smartrelays',
     viewsEngine: 'jade',
     directories: {
         static: __dirname + '/static',
