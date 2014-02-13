@@ -134,7 +134,34 @@ function trainNetworks() {
         async.eachSeries(
             models,
             function (model, next) {
-                model.train(next);
+                model.train(
+                    function (documents, callback) {
+                        if (Array.isArray(documents)) {
+                            documents = documents.filter(function (document, index) {
+                                var keep = false,
+                                    nextDocument = documents[index + 1],
+                                    deltaTime = null;
+
+                                if (nextDocument) {
+                                    deltaTime = nextDocument.rawData.date.getTime() -
+                                                document.rawData.date.getTime();
+                                }
+
+                                if ( // Keep this document if it is last or the next one is more than one minute in the future
+                                    !nextDocument ||
+                                    (deltaTime !== null && deltaTime > 60000)
+                                ) {
+                                    keep = true;
+                                }
+
+                                return keep;
+                            });
+                        }
+
+                        callback(documents);
+                    },
+                    next
+                );
             },
             function (error) {
                 models = null;
