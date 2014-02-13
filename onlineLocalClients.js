@@ -25,12 +25,12 @@ module.exports.getMacByIp = function (ip) {
 };
 
 module.exports.updateAll = function () {
-    var broadcastIp = ip.address().replace(/\d+$/, '1');
+    var broadcastIp = ip.address().replace(/\d+$/, '');
 
     clearTimeout(updateTimer);
 
     exec(
-        'ping -b -c 1 ' + broadcastIp + ' && arp -na',
+        'ping -b -c 1 ' + broadcastIp + '1 && ping -b -c 1 ' + broadcastIp + '255 && arp -na',
         { timeout: 2000 },
         function (error, output) {
             if (error || !output) {
