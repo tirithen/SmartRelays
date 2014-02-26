@@ -4,7 +4,10 @@ module.exports = function (mongoose) {
                 type: String,
                 required: true,
                 unique: true,
-                validate: /^([0-9a-fA-F]{2}[:-]){5}([0-9a-fA-F]{2})$/
+                validate: /^([0-9a-f]{2}[:-]){5}([0-9a-f]{2})$/,
+                set: function (value) {
+                    return value.toLowerCase()
+                }
             },
             createdAt: { type: Date, 'default': Date.now },
             updatedAt: { type: Date, 'default': Date.now }
